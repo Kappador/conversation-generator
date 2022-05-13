@@ -12,7 +12,7 @@ async function generateConversation(topic) {
 
   const openAiLib = require(`openai`);
   const config = new openAiLib.Configuration({
-    apiKey: `OAI_API_KEY`,
+    apiKey: `OPENAI_API_KEY`,
   });
   const openai = new openAiLib.OpenAIApi(config);
   const response = await openai.createCompletion(`text-davinci-002`, {
@@ -123,12 +123,16 @@ async function generateConversation(topic) {
     console.log(formattedConversation);
   }
 
+  recentlyGenned = formattedConversation;
+
   return {
     success: 1,
     conversation: formattedConversation,
     sentences: formattedConversation.length,
   };
 }
+
+let recentlyGenned = [];
 
 var readline = require('readline');
 var rl = readline.createInterface({
@@ -141,6 +145,8 @@ let firstGeneration = true;
 let justGenerated = false;
 
 console.log("give me a topic brah\n")
+
+let conversations = [] ;
 
 rl.on('line', function(line){
 
@@ -160,20 +166,35 @@ rl.on('line', function(line){
 
         let args = line.split(" ")
 
-        if (args[0] === "1")
+        if (args[0] === "1"){
             console.log("saved");
-        else if (args[0] === "2")
+
+            conversations.push(recentlyGenned)
+
+            justGenerated = true
+        }else if (args[0] === "2"){
             console.log("deleted");
-        else if (args[0] === "3")
+            justGenerated = true
+         } else if (args[0] === "3")
             {console.log("regenerating...");
-            generateConversation(args[1]).then((res) => {
-                console.log(`Topic: ${args[1]} Sentences: ${res.sentences}`);
+            let topic = line.substring(line.indexOf(" ") + 1);
+            generateConversation(topic).then((res) => {
+                console.log(`Topic: ${topic} Sentences: ${res.sentences}`);
                 console.log(res.conversation);
                 console.log(`\n\n`);
                 console.log("what do you think?");
                 justGenerated = true;
             })
+        } else if (args[0] === "4") {
+          conversations.forEach(conv => conv.forEach(sentence => console.log(sentence)))
+          conversations = [];
+          justGenerated = true;
+        } else {
+
+          justGenerated = true;
+          
         }
+        console.log("\ngive me a topic brah\n");
         return;
     }
 })
